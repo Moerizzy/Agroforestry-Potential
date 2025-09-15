@@ -55,6 +55,7 @@ __pycache__/
 Thumbs.db
 *.tmp
 *~
+*:Zone.Identifier
 
 # Log Files
 *.log
