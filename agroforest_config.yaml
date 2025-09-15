@@ -1,0 +1,136 @@
+# Agroforestry Data Pipeline Configuration
+# Single comprehensive configuration file for the enhanced agroforestry analysis pipeline
+# This pipeline downloads field blocks, environmental data, and performs comprehensive analysis
+
+# WFS Services for vector data download
+wfs_services:
+  
+  # Feldblöcke (Field Blocks) - Brandenburg - PRIMARY DATA SOURCE
+  feldbloecke:
+    url: "https://isk.geobasis-bb.de/ows/geobroker_l_dfbk_wfs"
+    typename: "refbb:Feldblock"
+    target_crs: "EPSG:25833"
+    description: "Agricultural field blocks for Brandenburg"
+    output_format: "application/gml+xml; version=3.2"
+    
+  # Bodenertrag (Soil Yield) - Brandenburg
+  bodenertrag:
+    url: "https://inspire.brandenburg.de/services/boertrag_wfs"
+    typename: "app:boertrag_lw"
+    target_crs: "EPSG:25833"
+    description: "Agricultural soil yield data for Brandenburg with classification"
+    
+  # Protected Areas - Federal (BfN) - These areas typically forbid agroforestry
+  naturschutzgebiete:
+    url: "https://geodienste.bfn.de/ogc/wfs/schutzgebiet"
+    typename: "bfn_sch_Schutzgebiet:Naturschutzgebiete"
+    target_crs: "EPSG:25833"
+    description: "Nature protection areas (Naturschutzgebiete)"
+    output_format: "ESRIGEOJSON"
+    
+  naturmonumente:
+    url: "https://geodienste.bfn.de/ogc/wfs/schutzgebiet"
+    typename: "bfn_sch_Schutzgebiet:Nationale_Naturmonumente"
+    target_crs: "EPSG:25833"
+    description: "National natural monuments"
+    output_format: "ESRIGEOJSON"
+    
+  nationalparke:
+    url: "https://geodienste.bfn.de/ogc/wfs/schutzgebiet"
+    typename: "bfn_sch_Schutzgebiet:Nationalparke"
+    target_crs: "EPSG:25833"
+    description: "National parks"
+    output_format: "ESRIGEOJSON"
+    
+  biosphaerenreservate:
+    url: "https://geodienste.bfn.de/ogc/wfs/schutzgebiet"
+    typename: "bfn_sch_Schutzgebiet:Biosphaerenreservate"
+    target_crs: "EPSG:25833"
+    description: "Biosphere reserves"
+    output_format: "ESRIGEOJSON"
+
+# WMS Services for raster data download (working services only)
+wms:
+  # Brandenburg Erosion Services - CONFIRMED WORKING
+  - id: eros_wasser
+    name: "wa_gefstufen_rksl"
+    url: "https://inspire.brandenburg.de/services/boerosion_wms?language=ger"
+    crs: "EPSG:25833"
+    fmt: "image/png"
+    res: 5.0
+    description: "Water erosion risk levels"
+
+  - id: eros_wind
+    name: "wi_gefstufen"
+    url: "https://inspire.brandenburg.de/services/boerosion_wms?language=ger"
+    crs: "EPSG:25833"
+    fmt: "image/png"
+    res: 5.0
+    description: "Wind erosion risk levels"
+
+# Local raster files (reliable alternative to problematic WMS services)
+local_rasters:
+  - id: dry
+    file: "data/Trockenheitsindex/trockenheits_index_2024.tif"
+    description: "Aridity/Drought Index 2024 (1km resolution)"
+    
+  - id: nfk
+    file: "data/Feldkapazitaet/NFKWe1000_250.tif"
+    description: "Field Capacity - Nutzbare Feldkapazität (250m resolution)"
+
+# Processing Settings
+processing:
+  # Field geometry features to calculate
+  geometry_features:
+    area_ha: true           # Field area in hectares
+    circumference_m: true   # Field perimeter in meters  
+    compactness: true       # Shape compactness ratio (4π×area/perimeter²)
+  
+  # Bodenertrag classification scheme
+  bodenertrag_classification:
+    enabled: true
+    column_name: "ertrag_kurz"  # Column containing classification values
+    classification_scheme:
+      "g/r": 1    # good/red (gut/rot)
+      "g": 2      # good (gut)
+      "n/g": 3    # neutral/good (neutral/gut)
+      "g/n": 4    # good/neutral (gut/neutral)
+      default: 0  # unclassified
+  
+  # Zonal statistics settings
+  zonal_stats:
+    stats: ["mean"]           # Only calculate mean values (simplified output)
+    all_touched: true         # Include pixels touching polygon boundaries (better coverage)
+    raster_resolution: 25.0   # Default rasterization resolution in meters
+
+# Default settings for WFS services
+defaults:
+  chunk_size: 5000
+  timeout: 30
+  target_crs: "EPSG:25833"  # UTM Zone 33N for Brandenburg
+  use_bbox_from_extent: true
+  buffer: 0  # No buffer by default
+
+# Output settings  
+output:
+  data_directory: "data"
+  file_format: "geojson"    # Use GeoJSON to avoid GPKG FID issues
+  raster_directory: "rasters"
+  include_csv: true         # Also output CSV without geometry
+  
+# Protected areas configuration (areas that typically forbid agroforestry)
+protected_areas:
+  merge_these:
+    - naturschutzgebiete
+    - naturmonumente  
+    - nationalparke
+    - biosphaerenreservate
+  output_name: "protected_areas_merged"
+  buffer_distance: 0  # No buffer for protected areas
+
+# Data quality settings
+quality:
+  min_field_area_ha: 0.01      # Minimum field size to process
+  max_field_area_ha: 1000      # Maximum reasonable field size
+  remove_null_geometries: true  # Remove fields with invalid geometry
+  fix_invalid_geometries: true  # Attempt to fix invalid geometries

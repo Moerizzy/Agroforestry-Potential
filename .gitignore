@@ -1,0 +1,75 @@
+# Conda Environment
+condaenv/
+
+# Data Aggregation Pipeline Outputs
+collected_data/
+tree_influence_results/
+results/
+
+# Agroforestry Analysis Outputs
+analysis_results/
+agroforest_analysis_results/
+
+# GIS Visualization Outputs
+gis_visualization/
+
+# Output Files from Scripts
+*.csv
+*.gpkg
+*.png
+*.json
+
+# Specific Output Files
+agroforest_analysis.csv
+top_candidates.csv
+potential_distribution.png
+feature_correlation.png
+agroforestry_potential.gpkg
+analysis_metadata.json
+feldblocks_with_features.gpkg
+feldblocks_with_features.csv
+
+# Raster Processing Outputs
+rasters/
+
+# Temporary and Cache Files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.pytest_cache/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.tmp
+*~
+
+# Log Files
+*.log
+
+# Downloaded Data Files (keep structure but exclude large files)
+data/**/*.tif
+data/**/*.shp
+data/**/*.shx
+data/**/*.dbf
+data/**/*.prj
+data/**/*.cpg
+data/**/*.zip
+data/**/*.tar.gz
+
+# Keep data directory structure but exclude large files
+!data/
+!data/*/
+!data/*/.gitkeep
